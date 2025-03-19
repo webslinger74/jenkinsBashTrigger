@@ -1,0 +1,31 @@
+pipeline {
+  agent any
+
+  parameters {
+    choice(name: 'DESTINATION', choices: ['dev', 'prod'])
+    stashedFile 'csvFile'
+  }
+
+  environment {
+    NAME = sh(script: 'getName.sh', returnStOut: true).trim()
+  }
+
+  stages {
+    stage('Checkout') {
+       steps {
+
+       }
+    }
+
+    stage('Trigger Update') {
+      sh 'cp csvFile ${WORKSPACE}/claimants.csv'
+      sh 'trigger-update DESTINATION=${params.DESTINATION}'
+    }
+  }
+
+  post {
+    always {
+        cleanWs()
+    }
+
+  }
