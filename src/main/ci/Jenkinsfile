@@ -7,25 +7,39 @@ pipeline {
   }
 
   environment {
-    NAME = sh(script: 'getName.sh', returnStOut: true).trim()
+    NAME = sh(script: "chmod 700 src/main/ci/getName.sh; src/main/ci/getName.sh", returnStdout:true).trim()
   }
 
   stages {
     stage('Checkout') {
        steps {
-
+         script {
+          unstash 'csvFile'
+          sh 'cat csvFile'
        }
     }
+  }
 
     stage('Trigger Update') {
-      sh 'cp csvFile ${WORKSPACE}/claimants.csv'
-      sh 'trigger-update DESTINATION=${params.DESTINATION}'
+      steps {
+           script {
+        echo "triggering for ${env.NAME}"
+        echo "$params.DESTINATION"
+        unstash 'csvFile'
+        sh 'cat csvFile'
+        sh 'cp csvFile ${WORKSPACE}/claimants.csv'
+        sh 'chmod 700 src/main/ci/trigger-update.sh' 
+         echo "The selected environment is: ${params.DESTINATION}"
+       sh "src/main/ci/trigger-update.sh ${params.DESTINATION}"   // NEED DOUBLE QUOTES FOR INTERPOL VALUE IN SH SCRIPT
+     }
+      }
     }
   }
 
   post {
     always {
         cleanWs()
-    }
-
+     }
+   }
+  
   }
